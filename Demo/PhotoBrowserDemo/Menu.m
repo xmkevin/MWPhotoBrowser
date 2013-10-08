@@ -71,7 +71,7 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    NSInteger rows = 3;
+    NSInteger rows = 4;
     if (self.assets.count) rows++;
     return rows;
 }
@@ -90,8 +90,9 @@
 	switch (indexPath.row) {
 		case 0: cell.textLabel.text = @"Single local photo"; break;
 		case 1: cell.textLabel.text = @"Local photos"; break;
-		case 2: cell.textLabel.text = @"Flickr photos"; break;
-		case 3: cell.textLabel.text = @"Library photos"; break;
+		case 2: cell.textLabel.text = @"Local photos with selections"; break;
+		case 3: cell.textLabel.text = @"Flickr photos"; break;
+		case 4: cell.textLabel.text = @"Library photos"; break;
 		default: break;
 	}
     return cell;
@@ -106,35 +107,54 @@
 	// Browser
 	NSMutableArray *photos = [[NSMutableArray alloc] init];
     MWPhoto *photo;
+    BOOL displaySelectionButtons = NO;
+    BOOL displayNavArrows = NO;
 	switch (indexPath.row) {
 		case 0: 
-            photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"photo2l" ofType:@"jpg"]]];
+            photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"photo2" ofType:@"jpg"]]];
             photo.caption = @"The London Eye is a giant Ferris wheel situated on the banks of the River Thames, in London, England.";
 			[photos addObject:photo];
 			break;
 		case 1: {
-            photo = [MWPhoto photoWithImage:[UIImage imageWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"photo1l" ofType:@"jpg"]]];
-            photo.caption = @"Grotto of the Madonna";
+            photo = [MWPhoto photoWithImage:[UIImage imageWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"photo5" ofType:@"jpg"]]];
+            photo.caption = @"Fireworks";
 			[photos addObject:photo];
-            photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"photo2l" ofType:@"jpg"]]];
+            photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"photo2" ofType:@"jpg"]]];
             photo.caption = @"The London Eye is a giant Ferris wheel situated on the banks of the River Thames, in London, England.";
 			[photos addObject:photo];
-            photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"photo3l" ofType:@"jpg"]]];
+            photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"photo3" ofType:@"jpg"]]];
             photo.caption = @"York Floods";
 			[photos addObject:photo];
-            photo = [MWPhoto photoWithImage:[UIImage imageWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"photo4l" ofType:@"jpg"]]];
+            photo = [MWPhoto photoWithImage:[UIImage imageWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"photo4" ofType:@"jpg"]]];
             photo.caption = @"Campervan";
 			[photos addObject:photo];
+            displayNavArrows = YES;
 			break;
         }
-		case 2:
+		case 2: {
+            photo = [MWPhoto photoWithImage:[UIImage imageWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"photo4" ofType:@"jpg"]]];
+            photo.caption = @"Campervan";
+			[photos addObject:photo];
+            photo = [MWPhoto photoWithImage:[UIImage imageWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"photo1" ofType:@"jpg"]]];
+            photo.caption = @"Grotto of the Madonna";
+			[photos addObject:photo];
+            photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"photo2" ofType:@"jpg"]]];
+            photo.caption = @"The London Eye is a giant Ferris wheel situated on the banks of the River Thames, in London, England.";
+			[photos addObject:photo];
+            photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"photo3" ofType:@"jpg"]]];
+            photo.caption = @"York Floods";
+			[photos addObject:photo];
+            displaySelectionButtons = YES;
+			break;
+        }
+		case 3:
 			[photos addObject:[MWPhoto photoWithURL:[NSURL URLWithString:@"http://farm4.static.flickr.com/3567/3523321514_371d9ac42f_b.jpg"]]];
 			[photos addObject:[MWPhoto photoWithURL:[NSURL URLWithString:@"http://farm4.static.flickr.com/3629/3339128908_7aecabc34b_b.jpg"]]];
 			[photos addObject:[MWPhoto photoWithURL:[NSURL URLWithString:@"http://farm4.static.flickr.com/3364/3338617424_7ff836d55f_b.jpg"]]];
 			[photos addObject:[MWPhoto photoWithURL:[NSURL URLWithString:@"http://farm4.static.flickr.com/3590/3329114220_5fbc5bc92b_b.jpg"]]];
 			[photos addObject:[MWPhoto photoWithURL:[NSURL URLWithString:@"http://farm3.staticflickr.com/2449/4052876281_6e068ac860_b.jpg"]]];
 			break;
-		case 3:
+		case 4:
             for (ALAsset *asset in self.assets) {
                 [photos addObject:[MWPhoto photoWithURL:asset.defaultRepresentation.url]];
             }
@@ -146,10 +166,19 @@
 	// Create browser
 	MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
     browser.displayActionButton = YES;
-    browser.displayNavArrows = NO;
+    browser.displayNavArrows = displayNavArrows;
+    browser.displaySelectionButtons = displaySelectionButtons;
     browser.wantsFullScreenLayout = YES;
     browser.zoomPhotosToFill = YES;
     [browser setCurrentPhotoIndex:0];
+    
+    // Reset selections
+    if (displaySelectionButtons) {
+        _selections = [NSMutableArray new];
+        for (int i = 0; i < photos.count; i++) {
+            [_selections addObject:[NSNumber numberWithBool:NO]];
+        }
+    }
     
     // Show
     if (_segmentedControl.selectedSegmentIndex == 0) {
@@ -171,21 +200,28 @@
     double delayInSeconds = 3;
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-        
-        // Test removing an object
+    
+//        // Test removing an object
 //        [_photos removeLastObject];
 //        [browser reloadData];
-        
-        // Test all new
+//    
+//        // Test all new
 //        [_photos removeAllObjects];
-//        [_photos addObject:[MWPhoto photoWithFilePath:[[NSBundle mainBundle] pathForResource:@"photo3l" ofType:@"jpg"]]];
+//        [_photos addObject:[MWPhoto photoWithFilePath:[[NSBundle mainBundle] pathForResource:@"photo3" ofType:@"jpg"]]];
+//        [browser reloadData];
+//    
+//        // Test changing photo index
+//        [browser setCurrentPhotoIndex:9];
+    
+//        // Test updating selections
+//        _selections = [NSMutableArray new];
+//        for (int i = 0; i < [self numberOfPhotosInPhotoBrowser:browser]; i++) {
+//            [_selections addObject:[NSNumber numberWithBool:YES]];
+//        }
 //        [browser reloadData];
         
-        // Test changing photo index
-//        [browser setCurrentPhotoIndex:9];
-        
     });
-	
+
 }
 
 #pragma mark - MWPhotoBrowserDelegate
@@ -213,7 +249,16 @@
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser didDisplayPhotoAtIndex:(NSUInteger)index {
     NSLog(@"Did start viewing photo at index %i", index);
 }
-                                         
+
+- (BOOL)photoBrowser:(MWPhotoBrowser *)photoBrowser isPhotoSelectedAtIndex:(NSUInteger)index {
+    return [[_selections objectAtIndex:index] boolValue];
+}
+
+- (void)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index selectedChanged:(BOOL)selected {
+    [_selections replaceObjectAtIndex:index withObject:[NSNumber numberWithBool:selected]];
+    NSLog(@"Photo at index %i selected %@", index, selected ? @"YES" : @"NO");
+}
+
 #pragma mark - Load Assets
 
 - (void)loadAssets {

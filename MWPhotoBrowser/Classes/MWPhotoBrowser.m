@@ -13,8 +13,6 @@
 #import "SDImageCache.h"
 
 #define PADDING                 10
-#define PAGE_INDEX_TAG_OFFSET   1000
-#define PAGE_INDEX(page)        ([(page) tag] - PAGE_INDEX_TAG_OFFSET)
 #define ACTION_SHEET_OLD_ACTIONS 2000
 
 // Private
@@ -67,6 +65,7 @@
 @property (nonatomic) UIActivityViewController *activityViewController;
 
 // Layout
+- (void)layoutVisiblePages;
 - (void)performLayout;
 - (BOOL)presentingViewControllerPrefersStatusBarHidden;
 
@@ -91,6 +90,7 @@
 - (CGPoint)contentOffsetForPageAtIndex:(NSUInteger)index;
 - (CGRect)frameForToolbarAtOrientation:(UIInterfaceOrientation)orientation;
 - (CGRect)frameForCaptionView:(MWCaptionView *)captionView atIndex:(NSUInteger)index;
+- (CGRect)frameForSelectedButton:(UIButton *)selectedButton atIndex:(NSUInteger)index;
 
 // Navigation
 - (void)updateNavigation;
@@ -521,10 +521,12 @@
 #pragma mark - Layout
 
 - (void)viewWillLayoutSubviews {
-    
-    // Super
     [super viewWillLayoutSubviews];
-	
+    [self layoutVisiblePages];
+}
+
+- (void)layoutVisiblePages {
+    
 	// Flag
 	_performingLayout = YES;
 	
@@ -545,9 +547,14 @@
 	
 	// Adjust frames and configuration of each visible page
 	for (MWZoomingScrollView *page in _visiblePages) {
-        NSUInteger index = PAGE_INDEX(page);
+        NSUInteger index = page.index;
 		page.frame = [self frameForPageAtIndex:index];
-        page.captionView.frame = [self frameForCaptionView:page.captionView atIndex:index];
+        if (page.captionView) {
+            page.captionView.frame = [self frameForCaptionView:page.captionView atIndex:index];
+        }
+        if (page.selectedButton) {
+            page.selectedButton.frame = [self frameForSelectedButton:page.selectedButton atIndex:index];
+        }
         
         // Adjust scales if bounds has changed since last time
         static CGRect previousBounds = {0};
@@ -596,6 +603,9 @@
 	
 	// Delay control holding
 	[self hideControlsAfterDelay];
+    
+    // Layout
+    [self layoutVisiblePages];
 	
 }
 
@@ -696,7 +706,7 @@
     MWZoomingScrollView *page = [self pageDisplayingPhoto:photo];
     if (page) {
         // If page is current page then initiate loading of previous and next pages
-        NSUInteger pageIndex = PAGE_INDEX(page);
+        NSUInteger pageIndex = page.index;
         if (_currentPageIndex == pageIndex) {
             if (pageIndex > 0) {
                 // Preload index - 1
@@ -755,9 +765,11 @@
 	// Recycle no longer needed pages
     NSInteger pageIndex;
 	for (MWZoomingScrollView *page in _visiblePages) {
-        pageIndex = PAGE_INDEX(page);
+        pageIndex = page.index;
 		if (pageIndex < (NSUInteger)iFirstIndex || pageIndex > (NSUInteger)iLastIndex) {
 			[_recycledPages addObject:page];
+            [page.captionView removeFromSuperview];
+            [page.selectedButton removeFromSuperview];
             [page prepareForReuse];
 			[page removeFromSuperview];
 			MWLog(@"Removed page at index %i", PAGE_INDEX(page));
@@ -783,9 +795,26 @@
             
             // Add caption
             MWCaptionView *captionView = [self captionViewForPhotoAtIndex:index];
-            captionView.frame = [self frameForCaptionView:captionView atIndex:index];
-            [_pagingScrollView addSubview:captionView];
-            page.captionView = captionView;
+            if (captionView) {
+                captionView.frame = [self frameForCaptionView:captionView atIndex:index];
+                [_pagingScrollView addSubview:captionView];
+                page.captionView = captionView;
+            }
+            
+            // Add selected button
+            if (self.displaySelectionButtons) {
+                UIButton *selectedButton = [UIButton buttonWithType:UIButtonTypeCustom];
+                [selectedButton setImage:[UIImage imageNamed:@"MWPhotoBrowser.bundle/images/SelectedButtonOff.png"] forState:UIControlStateNormal];
+                [selectedButton setImage:[UIImage imageNamed:@"MWPhotoBrowser.bundle/images/SelectedButtonOn.png"] forState:UIControlStateSelected];
+                [selectedButton sizeToFit];
+                [selectedButton addTarget:self action:@selector(selectedButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
+                selectedButton.frame = [self frameForSelectedButton:selectedButton atIndex:index];
+                [_pagingScrollView addSubview:selectedButton];
+                page.selectedButton = selectedButton;
+                if ([self.delegate respondsToSelector:@selector(photoBrowser:isPhotoSelectedAtIndex:)]) {
+                    selectedButton.selected = [self.delegate photoBrowser:self isPhotoSelectedAtIndex:index];
+                }
+            }
             
 		}
 	}
@@ -794,14 +823,14 @@
 
 - (BOOL)isDisplayingPageForIndex:(NSUInteger)index {
 	for (MWZoomingScrollView *page in _visiblePages)
-		if (PAGE_INDEX(page) == index) return YES;
+		if (page.index == index) return YES;
 	return NO;
 }
 
 - (MWZoomingScrollView *)pageDisplayedAtIndex:(NSUInteger)index {
 	MWZoomingScrollView *thePage = nil;
 	for (MWZoomingScrollView *page in _visiblePages) {
-		if (PAGE_INDEX(page) == index) {
+		if (page.index == index) {
 			thePage = page; break;
 		}
 	}
@@ -820,7 +849,7 @@
 
 - (void)configurePage:(MWZoomingScrollView *)page forIndex:(NSUInteger)index {
 	page.frame = [self frameForPageAtIndex:index];
-    page.tag = PAGE_INDEX_TAG_OFFSET + index;
+    page.index = index;
     page.photo = [self photoAtIndex:index];
 }
 
@@ -937,6 +966,20 @@
     return CGRectIntegral(captionFrame);
 }
 
+- (CGRect)frameForSelectedButton:(UIButton *)selectedButton atIndex:(NSUInteger)index {
+    CGRect pageFrame = [self frameForPageAtIndex:index];
+    CGFloat yOffset = 0;
+    if (![self areControlsHidden]) {
+        UINavigationBar *navBar = self.navigationController.navigationBar;
+        yOffset = navBar.frame.origin.y + navBar.frame.size.height;
+    }
+    CGRect captionFrame = CGRectMake(pageFrame.origin.x + pageFrame.size.width - 20 - selectedButton.frame.size.width,
+                                     20 + yOffset,
+                                     selectedButton.frame.size.width,
+                                     selectedButton.frame.size.height);
+    return CGRectIntegral(captionFrame);
+}
+
 #pragma mark - UIScrollView Delegate
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
@@ -1015,6 +1058,26 @@
 
 - (void)showNextPhotoAnimated:(BOOL)animated {
     [self jumpToPageAtIndex:_currentPageIndex+1 animated:animated];
+}
+
+
+#pragma mark - Interactions
+
+- (void)selectedButtonTapped:(id)sender {
+    UIButton *selectedButton = (UIButton *)sender;
+    selectedButton.selected = !selectedButton.selected;
+    if ([self.delegate respondsToSelector:@selector(photoBrowser:photoAtIndex:selectedChanged:)]) {
+        NSUInteger index = NSUIntegerMax;
+        for (MWZoomingScrollView *page in _visiblePages) {
+            if (page.selectedButton == selectedButton) {
+                index = page.index;
+                break;
+            }
+        }
+        if (index != NSUIntegerMax) {
+            [self.delegate photoBrowser:self photoAtIndex:index selectedChanged:selectedButton.selected];
+        }
+    }
 }
 
 
@@ -1136,6 +1199,16 @@
             }
         }
         
+        // Selected buttons
+        for (MWZoomingScrollView *page in _visiblePages) {
+            if (page.selectedButton) {
+                UIButton *v = page.selectedButton;
+                CGRect newFrame = [self frameForSelectedButton:v atIndex:0];
+                newFrame.origin.x = v.frame.origin.x;
+                v.frame = newFrame;
+            }
+        }
+
     } completion:^(BOOL finished) {}];
     
 	// Control hiding timer

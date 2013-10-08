@@ -38,6 +38,7 @@ MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
 browser.displayActionButton = YES; // Show action button to allow sharing, copying, etc (defaults to YES)
 browser.displayNavArrows = NO; // Whether to display left and right nav arrows on toolbar (defaults to NO)
 browser.zoomPhotosToFill = YES; // Images that almost fill the screen will be initially zoomed to fill (defaults to YES)
+browser. displaySelectionButtons = NO; // Whether selection buttons are shown on each image (defaults to NO)
 [browser setCurrentPhotoIndex:1]; // Example: allows second image to be presented first
 browser.wantsFullScreenLayout = YES; // iOS 5 & 6 only: Decide if you want the photo browser full screen, i.e. whether the status bar is affected (defaults to YES)
 // Present
@@ -107,6 +108,21 @@ Example delegate method for custom caption view:
     MWPhoto *photo = [self.photos objectAtIndex:index];
     MyMWCaptionViewSubclass *captionView = [[MyMWCaptionViewSubclass alloc] initWithPhoto:photo];
     return [captionView autorelease];
+}
+```
+
+
+#### Selections
+
+The photo browser can display check boxes allowing the user to select one or more of the photos. To use this feature, simply enable the `displaySelectionButtons` property, and implement the following delegate methods:
+
+```obj-c
+- (BOOL)photoBrowser:(MWPhotoBrowser *)photoBrowser isPhotoSelectedAtIndex:(NSUInteger)index {
+    return [[_selections objectAtIndex:index] boolValue];
+}
+
+- (void)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index selectedChanged:(BOOL)selected {
+    [_selections replaceObjectAtIndex:index withObject:[NSNumber numberWithBool:selected]];
 }
 ```
 

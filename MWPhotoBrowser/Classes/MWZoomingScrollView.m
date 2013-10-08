@@ -39,7 +39,8 @@
 - (id)initWithPhotoBrowser:(MWPhotoBrowser *)browser {
     if ((self = [super init])) {
         
-        // Delegate
+        // Setup
+        _index = NSUIntegerMax;
         self.photoBrowser = browser;
         
 		// Tap view for background
@@ -102,8 +103,9 @@
 
 - (void)prepareForReuse {
     self.photo = nil;
-    [_captionView removeFromSuperview];
     self.captionView = nil;
+    self.selectedButton = nil;
+    _index = NSUIntegerMax;
 }
 
 #pragma mark - Image
