@@ -1,24 +1,28 @@
-Pod::Spec.new do |s|
-  s.name     = 'MWPhotoBrowser'
-  s.version  = '1.1.3'
-  s.license  = 'MIT'
-  s.summary  = 'A simple iOS photo browser.'
-  s.homepage = 'https://github.com/mwaterfall/MWPhotoBrowser'
-  s.author   = { 'Michael Waterfall' => 'mw@d3i.com' }
-  s.source   = { :git => 'https://github.com/xmkevin/MWPhotoBrowser.git'}
-  s.platform = :ios, '5.0'
-  
-  s.subspec 'ARC' do |arc|
-    arc.source_files = 'MWPhotoBrowser/Classes/*.{h,m}'
-    arc.requires_arc = true
-    arc.prefix_header_contents = '#import "MWPreprocessor.h"'
-  end
-  
-  s.resources = "MWPhotoBrowser/MWPhotoBrowser.bundle"
+[31m[!] Unknown arguments: MWPhotoBrowser, :path =[0m
 
-  s.frameworks = 'MessageUI', 'ImageIO', 'QuartzCore', 'AssetsLibrary'
+CocoaPods, the Objective-C library package manager.
 
-  s.dependency 'SDWebImage','3.4'
-  s.dependency 'MBProgressHUD'
-  s.dependency 'DACircularProgress'
-end
+Commands:
+
+    * [32mhelp        [0m   Show help for the given command.
+    * [32minit        [0m   Generate a Podfile for the current directory.
+    - [32minstall     [0m   Install project dependencies
+    * [32mipc         [0m   Inter-process communication
+    * [32mlib         [0m   Develop pods
+    * [32mlist        [0m   List pods
+    * [32moutdated    [0m   Show outdated project dependencies
+    * [32mpodfile-info[0m   Shows information on installed Pods.
+    * [32mpush        [0m   Push new specifications to a spec-repo
+    * [32mrepo        [0m   Manage spec-repositories
+    * [32msearch      [0m   Searches for pods
+    * [32msetup       [0m   Setup the CocoaPods environment
+    * [32mspec        [0m   Manage pod specs
+    * [32mupdate      [0m   Update outdated project dependencies
+
+Options:
+
+    --silent     Show nothing
+    --version    Show the version of CocoaPods
+    --no-color   Show output without color
+    --verbose    Show more debugging information
+    --help       Show help banner of specified command

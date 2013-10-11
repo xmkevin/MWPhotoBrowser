@@ -37,8 +37,10 @@
 	UIToolbar *_toolbar;
 	NSTimer *_controlVisibilityTimer;
 	UIBarButtonItem *_previousButton, *_nextButton, *_actionButton;
+    UIBarButtonItem *_deleteButton, *_editButton, *_doneButton;
     MBProgressHUD *_progressHUD;
     UIActionSheet *_actionsSheet;
+    UIActionSheet *_deleteSheet;
     
     // Appearance
     BOOL _previousNavBarHidden;
@@ -267,6 +269,14 @@
         _actionButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(actionButtonPressed:)];
     }
     
+    if(self.displayEditButtons)
+    {
+        _editButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(editButtonPressed:)];
+        _deleteButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemTrash target:self action:@selector(deleteButtonPressed:)];
+        _doneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneButtonPressed:)];
+        
+    }
+    
     // Update
     [self reloadData];
     
@@ -288,7 +298,7 @@
     // Navigation buttons
     if ([self.navigationController.viewControllers objectAtIndex:0] == self) {
         // We're first on stack so show done button
-        UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Done", nil) style:UIBarButtonItemStylePlain target:self action:@selector(doneButtonPressed:)];
+        UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Done", nil) style:UIBarButtonItemStylePlain target:self action:@selector(doneViewButtonPressed:)];
         // Set appearance
         if ([UIBarButtonItem respondsToSelector:@selector(appearance)]) {
             [doneButton setBackgroundImage:nil forState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
@@ -318,17 +328,34 @@
     }
     
     // Show action button on nav if we can
-    BOOL actionButtonOnNavBar = !self.navigationItem.rightBarButtonItem;
-    if (_actionButton && actionButtonOnNavBar) {
+    BOOL actionButtonOnNavBar = !self.navigationItem.rightBarButtonItem && !self.displayEditButtons;
+    if(_actionButton && actionButtonOnNavBar)
+    {
         self.navigationItem.rightBarButtonItem = _actionButton;
     }
-
+    
+    if(_doneButton && !actionButtonOnNavBar)
+    {
+        self.navigationItem.rightBarButtonItem = _doneButton;
+    }
+    
     // Toolbar items
     UIBarButtonItem *fixedLeftSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:self action:nil];
     fixedLeftSpace.width = 32; // To balance action button
     UIBarButtonItem *flexSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:self action:nil];
     NSMutableArray *items = [[NSMutableArray alloc] init];
-    if (_actionButton && !actionButtonOnNavBar) [items addObject:fixedLeftSpace];
+    
+    if(!actionButtonOnNavBar && !self.displayEditButtons)
+        [items addObject:fixedLeftSpace];
+    
+    if(self.displayEditButtons)
+    {
+        [items addObject:_actionButton];
+        [items addObject:fixedLeftSpace];
+        [items addObject:_deleteButton];
+    }
+    
+    
     [items addObject:flexSpace];
     if (_previousButton || _nextButton) {
         if (_previousButton && numberOfPhotos > 1) [items addObject:_previousButton];
@@ -336,7 +363,17 @@
         if (_nextButton && numberOfPhotos > 1) [items addObject:_nextButton];
     }
     [items addObject:flexSpace];
-    if (_actionButton && !actionButtonOnNavBar) [items addObject:_actionButton];
+    
+    if(self.displayEditButtons)
+    {
+        [items addObject:fixedLeftSpace];
+        [items addObject:fixedLeftSpace];
+        [items addObject:_editButton];
+    }
+    
+    if(!actionButtonOnNavBar && !self.displayEditButtons)
+        [items addObject:_actionButton];
+    
     [_toolbar setItems:items];
 
     // Toolbar visibility
@@ -1198,11 +1235,55 @@
 
 #pragma mark - Misc
 
-- (void)doneButtonPressed:(id)sender {
+- (void)doneViewButtonPressed:(id)sender {
     [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark - Actions
+
+-(void)doneButtonPressed:(id)sender
+{
+    if ([self.delegate respondsToSelector:@selector(photoBrowser:doneButtonPressedForPhotoAtIndex:)])
+    {
+        [self.delegate photoBrowser:self doneButtonPressedForPhotoAtIndex:_currentPageIndex];
+    }
+}
+
+-(void)editButtonPressed:(id)sender
+{
+    if ([self.delegate respondsToSelector:@selector(photoBrowser:editButtonPressedForPhotoAtIndex:)])
+    {
+        [self.delegate photoBrowser:self editButtonPressedForPhotoAtIndex:_currentPageIndex];
+    }
+}
+
+-(void)deleteButtonPressed:(id)sender
+{
+    if(_deleteSheet)
+    {
+        [_deleteSheet dismissWithClickedButtonIndex:_deleteSheet.cancelButtonIndex animated:YES];
+    }
+    else
+    {
+        _deleteSheet = [[UIActionSheet alloc] initWithTitle:Nil
+                                                   delegate:self
+                                          cancelButtonTitle:Nil
+                                     destructiveButtonTitle:NSLocalizedString(@"Delete", Nil)
+                                          otherButtonTitles:Nil, nil];
+        
+        _deleteSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+            [_deleteSheet showFromBarButtonItem:sender animated:YES];
+        } else {
+            [_deleteSheet showInView:self.view];
+        }
+        
+        // Keep controls hidden
+        [self setControlsHidden:NO animated:YES permanent:YES];
+
+    }
+    
+}
 
 - (void)actionButtonPressed:(id)sender {
     if (_actionsSheet) {
@@ -1299,6 +1380,19 @@
             }
         }
     }
+    else if( actionSheet == _deleteSheet)
+    {
+        _deleteSheet = Nil;
+        
+        if(buttonIndex == actionSheet.destructiveButtonIndex)
+        {
+            if([self.delegate respondsToSelector:@selector(photoBrowser:deleteButtonPressedForPhotoAtIndex:)])
+            {
+                [self.delegate photoBrowser:self deleteButtonPressedForPhotoAtIndex:_currentPageIndex];
+            }
+        }
+    }
+    
     [self hideControlsAfterDelay]; // Continue as normal...
 }
 

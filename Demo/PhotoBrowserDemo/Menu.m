@@ -146,7 +146,8 @@
 	// Create browser
 	MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
     browser.displayActionButton = YES;
-    browser.displayNavArrows = NO;
+    browser.displayNavArrows = YES;
+    browser.displayEditButtons = YES;
     browser.wantsFullScreenLayout = YES;
     browser.zoomPhotosToFill = YES;
     [browser setCurrentPhotoIndex:0];
@@ -212,6 +213,18 @@
 
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser didDisplayPhotoAtIndex:(NSUInteger)index {
     NSLog(@"Did start viewing photo at index %i", index);
+}
+
+-(void)photoBrowser:(MWPhotoBrowser *)photoBrowser deleteButtonPressedForPhotoAtIndex:(NSUInteger)index
+{
+}
+
+-(void)photoBrowser:(MWPhotoBrowser *)photoBrowser editButtonPressedForPhotoAtIndex:(NSUInteger)index
+{
+}
+
+-(void)photoBrowser:(MWPhotoBrowser *)photoBrowser doneButtonPressedForPhotoAtIndex:(NSUInteger)index
+{
 }
                                          
 #pragma mark - Load Assets
