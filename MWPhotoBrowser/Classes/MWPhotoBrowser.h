@@ -46,7 +46,9 @@
 @property (nonatomic) BOOL zoomPhotosToFill;
 @property (nonatomic) BOOL displayNavArrows;
 @property (nonatomic) BOOL displayActionButton;
-@property (nonatomic) BOOL displayEditButtons;
+@property (nonatomic) BOOL displayEditButton;
+@property (nonatomic) BOOL displayDeleteButton;
+@property (nonatomic) BOOL displayDoneButton;
 @property (nonatomic, readonly) NSUInteger currentIndex;
 
 // Init

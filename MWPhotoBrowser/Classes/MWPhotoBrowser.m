@@ -254,6 +254,8 @@
     _toolbar.barStyle = UIBarStyleBlackTranslucent;
     _toolbar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
     
+    
+    
     // Toolbar Items
     if (self.displayNavArrows) {
         NSString *arrowPathFormat;
@@ -267,14 +269,22 @@
     }
     if (self.displayActionButton) {
         _actionButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(actionButtonPressed:)];
+
     }
     
-    if(self.displayEditButtons)
+    if(self.displayDoneButton)
+    {
+        _doneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneButtonPressed:)];
+    }
+    
+    if(self.displayDeleteButton)
+    {
+        _deleteButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemTrash target:self action:@selector(deleteButtonPressed:)];
+    }
+    
+    if(self.displayEditButton)
     {
         _editButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(editButtonPressed:)];
-        _deleteButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemTrash target:self action:@selector(deleteButtonPressed:)];
-        _doneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneButtonPressed:)];
-        
     }
     
     // Update
@@ -328,13 +338,13 @@
     }
     
     // Show action button on nav if we can
-    BOOL actionButtonOnNavBar = !self.navigationItem.rightBarButtonItem && !self.displayEditButtons;
-    if(_actionButton && actionButtonOnNavBar)
+    BOOL actionButtonOnNavBar = !self.navigationItem.rightBarButtonItem && !self.displayDoneButton && _actionButton;
+    if(actionButtonOnNavBar)
     {
         self.navigationItem.rightBarButtonItem = _actionButton;
     }
     
-    if(_doneButton && !actionButtonOnNavBar)
+    if(_doneButton)
     {
         self.navigationItem.rightBarButtonItem = _doneButton;
     }
@@ -345,15 +355,10 @@
     UIBarButtonItem *flexSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:self action:nil];
     NSMutableArray *items = [[NSMutableArray alloc] init];
     
-    if(!actionButtonOnNavBar && !self.displayEditButtons)
-        [items addObject:fixedLeftSpace];
     
-    if(self.displayEditButtons)
-    {
-        [items addObject:_actionButton];
-        [items addObject:fixedLeftSpace];
-        [items addObject:_deleteButton];
-    }
+    if(_deleteButton) [items addObject:_deleteButton];
+    else [items addObject:fixedLeftSpace];
+    [items addObject:fixedLeftSpace];
     
     
     [items addObject:flexSpace];
@@ -364,15 +369,21 @@
     }
     [items addObject:flexSpace];
     
-    if(self.displayEditButtons)
+    BOOL actionButtonOnToolbar = _actionButton && !actionButtonOnNavBar;
+    
+    if(_editButton && actionButtonOnToolbar)
+    {
+        [items addObject:_editButton];
+        [items addObject:_actionButton];
+    }
+    else
     {
         [items addObject:fixedLeftSpace];
-        [items addObject:fixedLeftSpace];
-        [items addObject:_editButton];
+        if(_editButton)[items addObject:_editButton];
+        else if(actionButtonOnToolbar)[items addObject:_actionButton];
+        else [items addObject:fixedLeftSpace];
     }
     
-    if(!actionButtonOnNavBar && !self.displayEditButtons)
-        [items addObject:_actionButton];
     
     [_toolbar setItems:items];
 
@@ -1267,9 +1278,10 @@
     {
         _deleteSheet = [[UIActionSheet alloc] initWithTitle:Nil
                                                    delegate:self
-                                          cancelButtonTitle:Nil
+                                          cancelButtonTitle:NSLocalizedString(@"Cancel", nil)
                                      destructiveButtonTitle:NSLocalizedString(@"Delete", Nil)
                                           otherButtonTitles:Nil, nil];
+        
         
         _deleteSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {

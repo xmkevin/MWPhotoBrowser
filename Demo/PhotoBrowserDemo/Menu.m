@@ -147,7 +147,9 @@
 	MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
     browser.displayActionButton = YES;
     browser.displayNavArrows = YES;
-    browser.displayEditButtons = YES;
+    browser.displayEditButton = YES;
+    browser.displayDeleteButton = YES;
+    browser.displayDoneButton = NO;
     browser.wantsFullScreenLayout = YES;
     browser.zoomPhotosToFill = YES;
     [browser setCurrentPhotoIndex:0];
