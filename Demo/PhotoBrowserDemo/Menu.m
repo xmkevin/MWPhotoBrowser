@@ -152,6 +152,7 @@
     browser.displayDoneButton = NO;
     browser.wantsFullScreenLayout = YES;
     browser.zoomPhotosToFill = YES;
+    browser.useInferStyle = YES;
     [browser setCurrentPhotoIndex:0];
     
     // Show

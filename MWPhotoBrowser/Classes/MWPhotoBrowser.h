@@ -51,6 +51,8 @@
 @property (nonatomic) BOOL displayDeleteButton;
 @property (nonatomic) BOOL displayDoneButton;
 @property (nonatomic, readonly) NSUInteger currentIndex;
+// Whether or not the browser use infer style.
+@property (nonatomic) BOOL useInferStyle;
 
 // Init
 - (id)initWithPhotos:(NSArray *)photosArray  __attribute__((deprecated("Use initWithDelegate: instead"))); // Depreciated
