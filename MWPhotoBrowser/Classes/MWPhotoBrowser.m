@@ -256,6 +256,13 @@
         _toolbar.barStyle = UIBarStyleBlackTranslucent;
         _toolbar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
     }
+    else
+    {
+        if(self.toolbarBackgroundColor)
+        {
+            [_toolbar setBackgroundColor:self.toolbarBackgroundColor];
+        }
+    }
     
     
     // Toolbar Items

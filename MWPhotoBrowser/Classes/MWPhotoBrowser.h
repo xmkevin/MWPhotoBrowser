@@ -53,6 +53,8 @@
 @property (nonatomic, readonly) NSUInteger currentIndex;
 // Whether or not the browser use infer style.
 @property (nonatomic) BOOL useInferStyle;
+//If useInferStyle is YES and this property is setted, set toobar backgroundColor;
+@property (nonatomic, strong) UIColor *toolbarBackgroundColor;
 
 // Init
 - (id)initWithPhotos:(NSArray *)photosArray  __attribute__((deprecated("Use initWithDelegate: instead"))); // Depreciated
