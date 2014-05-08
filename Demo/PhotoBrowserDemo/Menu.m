@@ -149,7 +149,8 @@
     browser.displayNavArrows = YES;
     browser.displayEditButton = YES;
     browser.displayDeleteButton = YES;
-    browser.displayDoneButton = NO;
+    browser.displayDoneButton = YES;
+    browser.displayReportButton = YES;
     browser.wantsFullScreenLayout = YES;
     browser.zoomPhotosToFill = YES;
     browser.useInferStyle = YES;

@@ -37,7 +37,7 @@
 	UIToolbar *_toolbar;
 	NSTimer *_controlVisibilityTimer;
 	UIBarButtonItem *_previousButton, *_nextButton, *_actionButton;
-    UIBarButtonItem *_deleteButton, *_editButton, *_doneButton;
+    UIBarButtonItem *_deleteButton, *_editButton, *_doneButton, *_rptButton;
     MBProgressHUD *_progressHUD;
     UIActionSheet *_actionsSheet;
     UIActionSheet *_deleteSheet;
@@ -296,6 +296,11 @@
         _editButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(editButtonPressed:)];
     }
     
+    if(self.displayReportButton)
+    {
+        _rptButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemBookmarks target:self action:@selector(reportButtonPressed:)];
+    }
+    
     // Update
     [self reloadData];
     
@@ -365,9 +370,16 @@
     NSMutableArray *items = [[NSMutableArray alloc] init];
     
     
-    if(_deleteButton) [items addObject:_deleteButton];
-    else [items addObject:fixedLeftSpace];
-    [items addObject:fixedLeftSpace];
+    if (_deleteButton) {
+        [items addObject:_deleteButton];
+    }
+    if (_editButton) {
+        [items addObject:_editButton];
+    }
+    NSInteger spaceCount = 2 - items.count;
+    for (int i = 0; i < spaceCount; i++) {
+        [items addObject:fixedLeftSpace];
+    }
     
     
     [items addObject:flexSpace];
@@ -378,17 +390,17 @@
     }
     [items addObject:flexSpace];
     
-    BOOL actionButtonOnToolbar = _actionButton && !actionButtonOnNavBar;
     
-    if(_editButton && actionButtonOnToolbar)
+    BOOL actionButtonOnToolbar = _actionButton && !actionButtonOnNavBar;
+    if(_rptButton && actionButtonOnToolbar)
     {
-        [items addObject:_editButton];
+        [items addObject:_rptButton];
         [items addObject:_actionButton];
     }
     else
     {
         [items addObject:fixedLeftSpace];
-        if(_editButton)[items addObject:_editButton];
+        if(_rptButton)[items addObject:_rptButton];
         else if(actionButtonOnToolbar)[items addObject:_actionButton];
         else [items addObject:fixedLeftSpace];
     }
@@ -1277,6 +1289,14 @@
     if ([self.delegate respondsToSelector:@selector(photoBrowser:editButtonPressedForPhotoAtIndex:)])
     {
         [self.delegate photoBrowser:self editButtonPressedForPhotoAtIndex:_currentPageIndex];
+    }
+}
+
+- (void)reportButtonPressed:(id)sender
+{
+    if ([self.delegate respondsToSelector:@selector(photoBrowser:reportButtonPressedForPhotoAtIndex:)])
+    {
+        [self.delegate photoBrowser:self reportButtonPressedForPhotoAtIndex:_currentPageIndex];
     }
 }
 

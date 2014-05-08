@@ -36,6 +36,7 @@
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser deleteButtonPressedForPhotoAtIndex:(NSUInteger)index;
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser editButtonPressedForPhotoAtIndex:(NSUInteger)index;
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser doneButtonPressedForPhotoAtIndex:(NSUInteger)index;
+- (void)photoBrowser:(MWPhotoBrowser *)photoBrowser reportButtonPressedForPhotoAtIndex:(NSUInteger)index;
 
 @end
 
@@ -50,6 +51,7 @@
 @property (nonatomic) BOOL displayEditButton;
 @property (nonatomic) BOOL displayDeleteButton;
 @property (nonatomic) BOOL displayDoneButton;
+@property (nonatomic) BOOL displayReportButton;
 @property (nonatomic, readonly) NSUInteger currentIndex;
 // Whether or not the browser use infer style.
 @property (nonatomic) BOOL useInferStyle;
