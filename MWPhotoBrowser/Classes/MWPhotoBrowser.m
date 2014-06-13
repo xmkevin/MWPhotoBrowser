@@ -373,10 +373,11 @@
     if (_deleteButton) {
         [items addObject:_deleteButton];
     }
-    if (_editButton) {
-        [items addObject:_editButton];
+    if (_rptButton) {
+        [items addObject:fixedLeftSpace];
+        [items addObject:_rptButton];
     }
-    NSInteger spaceCount = 2 - items.count;
+    NSInteger spaceCount = 3 - items.count;
     for (int i = 0; i < spaceCount; i++) {
         [items addObject:fixedLeftSpace];
     }
@@ -392,17 +393,28 @@
     
     
     BOOL actionButtonOnToolbar = _actionButton && !actionButtonOnNavBar;
-    if(_rptButton && actionButtonOnToolbar)
+    if(_editButton && actionButtonOnToolbar)
     {
-        [items addObject:_rptButton];
+        [items addObject:_editButton];
+        [items addObject:fixedLeftSpace];
         [items addObject:_actionButton];
     }
     else
     {
         [items addObject:fixedLeftSpace];
-        if(_rptButton)[items addObject:_rptButton];
-        else if(actionButtonOnToolbar)[items addObject:_actionButton];
-        else [items addObject:fixedLeftSpace];
+        [items addObject:fixedLeftSpace];
+        if(_editButton)
+        {
+            [items addObject:_editButton];
+        }
+        else if(actionButtonOnToolbar)
+        {
+            [items addObject:_actionButton];
+        }
+        else
+        {
+            [items addObject:fixedLeftSpace];
+        }
     }
     
     
